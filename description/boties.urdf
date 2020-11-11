@@ -7,6 +7,9 @@
 	<material name="brown">
 		<color rgba="0.58 0.39 0.27 1"/>
 	</material>
+	<material name="pink">
+		<color rgba="0.81 0.45 0.67 1"/>
+	</material>
 	<link name="base_link">
 		<visual>
 			<geometry>
@@ -16,7 +19,7 @@
 		</visual>
 		<collision>
 			<geometry>
-				<cylinder length="0.01" radius="0.1"/>
+				<cylinder length="0.08" radius="0.1"/>
 			</geometry>
 		</collision>
 		<inertial>
@@ -25,7 +28,20 @@
 		</inertial>
 	</link>
 	<link name="dummy_link"></link>
-	<link name="leftWheel_link">
+	<link name="camera_link">
+		<visual>
+			<geometry>
+				<box size="0.02 0.05 0.02"/>
+			</geometry>
+			<material name="pink"/>
+		</visual>
+		<collision>
+			<geometry>
+				<box size="0.02 0.05 0.02"/>
+			</geometry>
+		</collision>
+	</link>
+	<link name="left_wheel">
 		<visual>
 			<geometry>
 				<cylinder length="0.05" radius="0.05"/>
@@ -42,7 +58,7 @@
 			<inertia ixx="0.00625" iyy="0.00625" izz="0.0125" ixy="0.0" ixz="0.0" iyz="0.0"/>
 		</inertial>
 	</link>
-	<link name="rightWheel_link">
+	<link name="right_wheel">
 		<visual>
 			<geometry>
 				<cylinder length="0.05" radius="0.05"/>
@@ -80,16 +96,22 @@
 		<parent link="base_link" />
 		<child  link="dummy_link" />
 	</joint>
+	<joint name="camera_joint" type="fixed">
+		<axis xyz="0 1 0"/>
+		<parent link="base_link"/>
+		<child link="camera_link"/>
+		<origin rpy="0 0 1.57075" xyz="0 0.05 0.05"/>
+	</joint>
 	<joint name="baseToLeftWheel_joint" type="continuous">
 		<axis   xyz="0 0 1"/>
 		<parent link="base_link" />
-		<child  link="leftWheel_link" />
+		<child  link="left_wheel" />
 		<origin rpy="0 1.57075 0" xyz="0.1 0.05 0" />
 	</joint>
 	<joint name="baseToRightWheel_joint" type="continuous">
 		<axis   xyz="0 0 1"/>
 		<parent link="base_link" />
-		<child  link="rightWheel_link" />
+		<child  link="right_wheel" />
 		<origin rpy="0 1.57075 0" xyz="-0.1 0.05 0" />
 	</joint>
 	<joint name="baseToSphere_joint" type="continuous">
@@ -116,14 +138,92 @@
 			<hardwareInterface>VelocityJointInterface</hardwareInterface>
 		</joint>
 	</transmission>
-	<gazebo reference="leftWheel_link">
+<!--
+	<gazebo reference="camera_link">
+		<sensor type="camera" name="primary_camera"/>
+		<update_rate>30.0</update_rate>
+		<camera name="head">
+			<horizontal_fov>1.3962634</horizontal_fov>
+			<image>
+				<width>800</width>
+				<height>800</height>
+				<format>R8G8B8</format>
+			</image>
+			<clip>
+				<near>0.02</near>
+				<far>300</far>
+			</clip>
+			<noise>
+				<type>gaussian</type>
+				<mean>0.0</mean>
+				<stddev>0.007</stddev>
+			</noise>
+		</camera>
+		<plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+			<alwaysOn>true</alwaysOn>
+			<updateRate>0.0</updateRate>
+			<cameraName>primary_camera</cameraName>
+			<imageTopicName>image_raw</imageTopicName>
+			<cameraInfoTopicName>camera_info</cameraInfoTopicName>
+			<frameName>/camera_link</frameName>
+			<hackBaseline>0.07</hackBaseline>
+			<distortionK1>0.0</distortionK1>
+			<distortionK2>0.0</distortionK2>
+			<distortionK3>0.0</distortionK3>
+			<distortionT1>0.0</distortionT1>
+			<distortionT2>0.0</distortionT2>
+		</plugin>
+	</gazebo>
+-->
+<gazebo reference="camera_link">
+  <sensor name="primary_camera" type="depth">
+    <update_rate>20</update_rate>
+    <camera>
+      <horizontal_fov>1.047198</horizontal_fov>
+      <image>
+        <width>640</width>
+        <height>480</height>
+        <format>R8G8B8</format>
+      </image>
+      <clip>
+        <near>0.05</near>
+        <far>3</far>
+      </clip>
+    </camera>
+    <plugin name="camera_controller" filename="libgazebo_ros_openni_kinect.so">
+      <baseline>0.2</baseline>
+      <alwaysOn>true</alwaysOn>
+      <updateRate>1.0</updateRate>
+      <cameraName>primary_camera_ir</cameraName>
+      <imageTopicName>/primary_camera/color/image_raw</imageTopicName>
+      <cameraInfoTopicName>/primary_camera/color/camera_info</cameraInfoTopicName>
+      <depthImageTopicName>/primary_camera/depth/image_raw</depthImageTopicName>
+      <depthImageInfoTopicName>/primary_camera/depth/camera_info</depthImageInfoTopicName>
+      <pointCloudTopicName>/primary_camera/depth/points</pointCloudTopicName>
+      <frameName>camera_link</frameName>
+      <pointCloudCutoff>0.5</pointCloudCutoff>
+      <pointCloudCutoffMax>3.0</pointCloudCutoffMax>
+      <distortionK1>0.00000001</distortionK1>
+      <distortionK2>0.00000001</distortionK2>
+      <distortionK3>0.00000001</distortionK3>
+      <distortionT1>0.00000001</distortionT1>
+      <distortionT2>0.00000001</distortionT2>
+      <CxPrime>0</CxPrime>
+      <Cx>0</Cx>
+      <Cy>0</Cy>
+      <focalLength>0</focalLength>
+      <hackBaseline>0</hackBaseline>
+    </plugin>
+  </sensor>
+</gazebo>
+	<gazebo reference="left_wheel">
 		<mu1 value="200.0"/>
 		<mu2 value="100.0"/>
 		<kp value="10000000.0"/>
 		<kd value="1.0"/>
 		<material>Gazebo/Grey</material>
 	</gazebo>
-	<gazebo reference="rightWheel_link">
+	<gazebo reference="right_wheel">
 		<mu1 value="200.0"/>
 		<mu2 value="100.0"/>
 		<kp value="10000000.0"/>
